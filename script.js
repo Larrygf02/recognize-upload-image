@@ -6,11 +6,12 @@ Promise.all([
     faceapi.nets.ssdMobilenetv1.loadFromUri('/models')
 ]).then(start)
 
-function start() {
+async function start() {
     const container = document.createElement('div')
     container.style.position = 'relative';
     document.body.append(container)
-    document.body.append('Loaded')
+    const labeledFaceDescriptors = await loadLabeledImages()
+    const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6)
     imageUpload.addEventListener('change', async () => {
         const image = await faceapi.bufferToImage(imageUpload.files[0])
         container.append(image)
@@ -21,22 +22,27 @@ function start() {
         const detections = await faceapi.detectAllFaces(image)
                                 .withFaceLandmarks().withFaceDescriptors()
         const resizedDetections = faceapi.resizeResults(detections, displaySize)
-        resizedDetections.forEach(detection => {
-            const box = detection.detection.box;
+        const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
+        results.forEach((result, i) => {
+            const box = resizedDetections[i].detection.box;
             console.log(box)
-            const drawBox = new faceapi.draw.DrawBox(box, { label: 'Face'})
+            const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString()})
             drawBox.draw(canvas)
         })
     })
 }
 
 function loadLabeledImages() {
-    const labels = ['Captain America']
+    const labels = ['capitan-america']
     return Promise.all(
         labels.map(async label => {
+            const descriptions = []
             for (let i=1; i<=2; i++) {
-                const img = await faceapi.fetchImage()
+                const img = await faceapi.fetchImage(`https://github.com/Larrygf02/recognize-upload-image/blob/master/labels/${label}/${i}.jpeg`)
+                const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
+                descriptions.push(detections.descriptor)
             }
+            return new faceapi.LabeledFaceDescriptors(label, descriptions)
         })
     )
 }
