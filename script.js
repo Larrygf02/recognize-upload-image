@@ -12,10 +12,12 @@ async function start() {
     document.body.append(container)
     const labeledFaceDescriptors = await loadLabeledImages()
     const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6)
+    let image
+    let canvas
     imageUpload.addEventListener('change', async () => {
-        const image = await faceapi.bufferToImage(imageUpload.files[0])
+        image = await faceapi.bufferToImage(imageUpload.files[0])
         container.append(image)
-        const canvas = faceapi.createCanvasFromMedia(image)
+        canvas = faceapi.createCanvasFromMedia(image)
         container.append(canvas)
         const displaySize = { width: image.width, height: image.height }
         faceapi.matchDimensions(canvas, displaySize)
