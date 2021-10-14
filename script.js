@@ -37,7 +37,7 @@ async function start() {
 }
 
 function loadLabeledImages() {
-    const labels = ['capitan-america','peque-grace']
+    const labels = ['peque-grace']
     return Promise.all(
         labels.map(async label => {
             const descriptions = []
